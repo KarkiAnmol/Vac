@@ -1,9 +1,27 @@
-//Server2 (Processor):
+package main
 
-// This server receives JSON objects from Server1.
-// It filters the data and sends the relevant information to OpenAI to generate commentary.
-// Once the commentary is generated, it sends it to web-server
+import (
+	"fmt"
+	"io/ioutil"
+	"net/http"
+)
 
-/* logic to filter JSON and generate commentary.
-- use OpenAI GPT or Wit.ai.
- - Send the commentary to the webserver.*/
+func main() {
+	// Send a ping request to Server 1
+	resp, err := http.Get("http://localhost:8081/ping")
+	if err != nil {
+		fmt.Println("Error sending ping request:", err)
+		return
+	}
+	defer resp.Body.Close()
+
+	// Read the response body
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Println("Error reading response body:", err)
+		return
+	}
+
+	// Display the pong received from Server 1
+	fmt.Println("Received pong from Server 1:", string(body))
+}
