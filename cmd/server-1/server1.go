@@ -1,15 +1,15 @@
 package main
 
-import (
-	"fmt"
-	"net/http"
-)
+import "github.com/gofiber/fiber/v2"
 
 func main() {
-	http.HandleFunc("/ping", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprint(w, "pong")
-	})
+	app := fiber.New()
 
-	fmt.Println("Server 1 listening on :8081...")
-	http.ListenAndServe(":8081", nil)
+	app.Get("/ping", func(c *fiber.Ctx) error {
+		return c.SendString("PONG")
+	})
+	err := app.Listen(":8081")
+	if err != nil {
+		panic(err)
+	}
 }
