@@ -21,8 +21,12 @@ func main() {
 		log.Fatal("File doesnot exist")
 	}
 	defer file.Close()
-	// input := "foo\nbar\nbaz"
+
 	scanner := bufio.NewScanner(file)
+	const maxCapacity = 10 * 1024 * 1024 // Set a larger buffer size (e.g., 10 MB)
+	// Increase buffer size to handle longer lines
+	buf := make([]byte, maxCapacity)
+	scanner.Buffer(buf, maxCapacity)
 	count := 1
 	for scanner.Scan() {
 		fmt.Println()
@@ -30,6 +34,9 @@ func main() {
 		fmt.Println(scanner.Text())
 		fmt.Println()
 		count++
+	}
+	if err := scanner.Err(); err != nil {
+		log.Fatal(err)
 	}
 
 	app.Get("/ping", func(c *fiber.Ctx) error {

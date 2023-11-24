@@ -8,7 +8,7 @@ import (
 
 func main() {
 	// Send a ping request to Server 1
-	resp, err := http.Get("http://localhost:8081/ping")
+	resp, err := http.Get("http://localhost:8081/get-json")
 	if err != nil {
 		fmt.Println("Error sending ping request:", err)
 		return
