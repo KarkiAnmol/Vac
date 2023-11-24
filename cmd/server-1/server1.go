@@ -36,23 +36,28 @@ type EventData struct {
 	// SeriesState       SeriesState `json:"seriesState"`
 }
 
-// Actors
+// ActorData represents the "actor" field in EventData
 type ActorData struct {
 	Type       string          `json:"type"`
 	ID         string          `json:"id"`
 	StateDelta ActorStateDelta `json:"stateDelta"`
 	State      ActorState      `json:"state"`
 }
+
+// ActorStateDelta represents the "stateDelta" field inside ActorData
 type ActorStateDelta struct {
 	ID   string        `json:"id"`
 	Game ActorGameData `json:"game"`
 }
 
+// ActorGameData represents the "game" field inside ActorStateDelta
 type ActorGameData struct {
 	ID          string `json:"id"`
 	DamageDealt int    `json:"damageDealt"`
 	// Add more fields as needed
 }
+
+// ActorState represents the "state" field inside ActorData
 type ActorState struct {
 	ID     string        `json:"id"`
 	TeamID string        `json:"teamId"`
@@ -73,8 +78,49 @@ type ActorSeries struct {
 	WeaponKills         map[string]int `json:"weaponKills"`
 }
 
+// TargetData represents the "target" field in EventData
 type TargetData struct {
-	// Define fields specific to the TargetData
+	Type       string           `json:"type"`
+	ID         string           `json:"id"`
+	StateDelta TargetStateDelta `json:"stateDelta"`
+	State      TargetState      `json:"state"`
+}
+
+// TargetStateDelta represents the "stateDelta" field inside TargetData
+type TargetStateDelta struct {
+	ID   string         `json:"id"`
+	Game TargetGameData `json:"game"`
+	// Round TargetRoundData `json:"round"`
+}
+
+// TargetGameData represents the "game" field inside TargetStateDelta
+type TargetGameData struct {
+	ID            string `json:"id"`
+	CurrentHealth int    `json:"currentHealth"`
+	DamageTaken   int    `json:"damageTaken"`
+	// CurrentArmor   int    `json:"currentArmor"`
+	// Add more fields as needed
+}
+
+// TargetState represents the "state" field inside TargetData which is inside target field,which inturn is inside event field
+type TargetState struct {
+	ID     string         `json:"id"`
+	TeamID string         `json:"teamId"`
+	Side   string         `json:"side"`
+	Series TargetSeries   `json:"series"`
+	Game   TargetGameData `json:"game"`
+	Name   string         `json:"name"`
+}
+
+// TargetSeries represents the "series" field inside TargetState
+type TargetSeries struct {
+	ID                  string         `json:"id"`
+	Name                string         `json:"name"`
+	ParticipationStatus string         `json:"participationStatus"`
+	Kills               int            `json:"kills"`
+	KillAssistsReceived int            `json:"killAssistsReceived"`
+	KillAssistsGiven    int            `json:"killAssistsGiven"`
+	WeaponKills         map[string]int `json:"weaponKills"`
 }
 
 // type SeriesDelta struct {
