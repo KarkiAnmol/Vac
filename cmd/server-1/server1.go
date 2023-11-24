@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"reflect"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -20,7 +21,7 @@ type Event struct {
 	OccurredAt            string      `json:"occurredAt"`
 	CorrelationID         string      `json:"correlationId"`
 	PublishedAt           string      `json:"publishedAt"`
-	SeriesID              int         `json:"seriesId"`
+	SeriesID              string      `json:"seriesId"`
 	SequenceNumber        int         `json:"sequenceNumber"`
 	SessionSequenceNumber int         `json:"sessionSequenceNumber"`
 	Events                []EventData `json:"events"`
@@ -151,7 +152,10 @@ func main() {
 	for scanner.Scan() {
 		fmt.Println()
 		fmt.Printf("%v : %s ", count, scanner.Text())
+
 		data := scanner.Text()
+		fmt.Printf("\n\nLength of Raw Data: %v\n", len(data))
+
 		//Unmarshalling Raw JSON into struct filters the JSON
 		err := json.Unmarshal([]byte(data), &e)
 		if err != nil {
@@ -161,10 +165,13 @@ func main() {
 		// Filter function can be called here if needed
 		// filteredData, err := filter(e)
 
-		fmt.Printf("\nFiltered Data: \n%+v\n", e)
+		fmt.Printf("\n\n\n%v : Filtered Data: \n%+v\n", count, e)
+		fmt.Printf("\n\nLength of Filtered Data: %v\n", int(reflect.TypeOf(e).Size()))
+
 		// later-on pass this filtered data to server 3 where the commentary will be generated
 
 		count++
+
 		break
 	}
 	if err := scanner.Err(); err != nil {
