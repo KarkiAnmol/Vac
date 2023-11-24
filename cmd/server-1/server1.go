@@ -14,11 +14,76 @@ var (
 	jsonLines []string // jsonLines is a slice of strings
 )
 
+//Event
 type Event struct {
-	ID            string `json:"id"`
-	OccurredAt    string `json:"occurredAt"`
-	CorrelationID string `json:"correlationId"`
+	ID                    string      `json:"id"`
+	OccurredAt            string      `json:"occurredAt"`
+	CorrelationID         string      `json:"correlationId"`
+	PublishedAt           string      `json:"publishedAt"`
+	SeriesID              int         `json:"seriesId"`
+	SequenceNumber        int         `json:"sequenceNumber"`
+	SessionSequenceNumber int         `json:"sessionSequenceNumber"`
+	Events                []EventData `json:"events"`
 }
+type EventData struct {
+	ID                string     `json:"id"`
+	IncludesFullState bool       `json:"includesFullState"`
+	Type              string     `json:"type"`
+	Actor             ActorData  `json:"actor"`
+	Action            string     `json:"action"`
+	Target            TargetData `json:"target"`
+	// SeriesStateDelta  SeriesDelta `json:"seriesStateDelta"`
+	// SeriesState       SeriesState `json:"seriesState"`
+}
+
+// Actors
+type ActorData struct {
+	Type       string          `json:"type"`
+	ID         string          `json:"id"`
+	StateDelta ActorStateDelta `json:"stateDelta"`
+	State      ActorState      `json:"state"`
+}
+type ActorStateDelta struct {
+	ID   string        `json:"id"`
+	Game ActorGameData `json:"game"`
+}
+
+type ActorGameData struct {
+	ID          string `json:"id"`
+	DamageDealt int    `json:"damageDealt"`
+	// Add more fields as needed
+}
+type ActorState struct {
+	ID     string        `json:"id"`
+	TeamID string        `json:"teamId"`
+	Side   string        `json:"side"`
+	Series ActorSeries   `json:"series"`
+	Game   ActorGameData `json:"game"`
+	Name   string        `json:"name"`
+}
+
+// ActorSeries represents the "series" field inside ActorState
+type ActorSeries struct {
+	ID                  string         `json:"id"`
+	Name                string         `json:"name"`
+	ParticipationStatus string         `json:"participationStatus"`
+	Kills               int            `json:"kills"`
+	KillAssistsReceived int            `json:"killAssistsReceived"`
+	KillAssistsGiven    int            `json:"killAssistsGiven"`
+	WeaponKills         map[string]int `json:"weaponKills"`
+}
+
+type TargetData struct {
+	// Define fields specific to the TargetData
+}
+
+// type SeriesDelta struct {
+// 	// Define fields specific to the SeriesDelta
+// }
+
+// type SeriesState struct {
+// 	// Define fields specific to the SeriesState
+// }
 
 var e Event
 
@@ -69,7 +134,8 @@ func main() {
 	}
 
 }
-func filter(event Event) (Event, error) {
 
-	return event, nil
-}
+// func filter(event Event) (Event, error) {
+
+// 	return event, nil
+// }
