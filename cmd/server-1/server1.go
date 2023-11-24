@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
@@ -12,6 +13,14 @@ import (
 var (
 	jsonLines []string // jsonLines is a slice of strings
 )
+
+type Event struct {
+	ID            string `json:"id"`
+	OccurredAt    string `json:"occurredAt"`
+	CorrelationID string `json:"correlationId"`
+}
+
+var e Event
 
 func main() {
 	app := fiber.New()
@@ -30,10 +39,22 @@ func main() {
 	count := 1
 	for scanner.Scan() {
 		fmt.Println()
-		fmt.Printf("%v : ", count)
-		fmt.Println(scanner.Text())
-		fmt.Println()
+		fmt.Printf("%v : %s ", count, scanner.Text())
+		data := scanner.Text()
+		//Unmarshalling Raw JSON into struct filters the JSON
+		err := json.Unmarshal([]byte(data), &e)
+		if err != nil {
+			log.Println("Error unmarshaling JSON:", err)
+			continue
+		}
+		// Filter function can be called here if needed
+		// filteredData, err := filter(e)
+
+		fmt.Printf("\nFiltered Data: \n%+v\n", e)
+		// later-on pass this filtered data to server 3 where the commentary will be generated
+
 		count++
+		break
 	}
 	if err := scanner.Err(); err != nil {
 		log.Fatal(err)
@@ -42,35 +63,13 @@ func main() {
 	app.Get("/ping", func(c *fiber.Ctx) error {
 		return c.SendString("PONG")
 	})
-	// app.Get("/get-json", func(c *fiber.Ctx) error {
-	// 	// Read the JSON file
-	// 	result, err := readJSONLinesFile()
-	// 	// Respond with the entire JSON data
-	// 	for _, line := range jsonLines {
-	// 		fmt.Println(line)
-	// 	}
 
-	// 	return nil
-	// })
-	err = app.Listen(":8081")
-	if err != nil {
+	if err := app.Listen(":8081"); err != nil {
 		panic(err)
 	}
 
 }
+func filter(event Event) (Event, error) {
 
-// func readNextJSONLine() (string, error) {
-// 	// For simplicity, this example reads a hard-coded JSONL string.
-// 	input := "\"Hello\"\n\"World\"\n42\n"
-// 	r := jsonl.NewReader(strings.NewReader(input))
-
-// 	var result string
-
-// 	// Read the next line
-// 	err := r.ReadLines(func(data []byte) error {
-// 		result = string(data)
-// 		return nil
-// 	})
-
-// 	return result, err
-// }
+	return event, nil
+}
