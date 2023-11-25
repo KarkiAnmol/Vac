@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"reflect"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -149,12 +148,12 @@ func main() {
 	buf := make([]byte, maxCapacity)
 	scanner.Buffer(buf, maxCapacity)
 	count := 1
+	i := 0
 	for scanner.Scan() {
 		fmt.Println()
-		fmt.Printf("%v : %s ", count, scanner.Text())
 
 		data := scanner.Text()
-		fmt.Printf("\n\nLength of Raw Data: %v\n", len(data))
+		// fmt.Printf("\n\nLength of Raw Data: %v\n", len(data))
 
 		//Unmarshalling Raw JSON into struct filters the JSON
 		err := json.Unmarshal([]byte(data), &e)
@@ -165,14 +164,30 @@ func main() {
 		// Filter function can be called here if needed
 		// filteredData, err := filter(e)
 
-		fmt.Printf("\n\n\n%v : Filtered Data: \n%+v\n", count, e)
-		fmt.Printf("\n\nLength of Filtered Data: %v\n", int(reflect.TypeOf(e).Size()))
+		// fmt.Printf("\n\n\n%v : Filtered Data: \n%+v\n", count, e)
+		// fmt.Printf("\n\nLength of Filtered Data: %v\n", int(reflect.TypeOf(e).Size()))
 
-		// later-on pass this filtered data to server 3 where the commentary will be generated
+		// Check if EventType is "player-damaged-player"
 
+		for _, eventData := range e.Events {
+			if eventData.Type == "player-killed-player" {
+				x, err := json.Marshal(e)
+				if err != nil {
+					return
+				}
+				fmt.Printf("\nFiltered Data: %+v", string(x))
+				// fmt.Printf("\n\nLength of Further Filtered Data: %v\n", int(reflect.TypeOf(e).Size()))
+				i++
+				fmt.Printf("\n\n  Times occured= %v\n  TotalCount= %v\n  ", i, count)
+
+				// later-on pass this filtered data to server 3 where the commentary will be generated
+			}
+		}
 		count++
+		if count == 100 {
+			break
+		}
 
-		break
 	}
 	if err := scanner.Err(); err != nil {
 		log.Fatal(err)
