@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -135,6 +136,7 @@ type TargetSeries struct {
 // }
 
 var e Event
+var i = 0
 
 func main() {
 	app := fiber.New()
@@ -172,6 +174,12 @@ func main() {
 
 		// responseChan := make(chan error)
 		for _, eventData := range e.Events {
+			if i > 2 {
+				i = 0
+				// fmt.Println("Sleeping for 5 seconds...")
+				time.Sleep(65 * time.Second)
+			}
+			i++
 			// Check for events in priority order
 			if eventData.Type == "team-completed-explodeBomb" {
 				// printFilteredData("Team Completed Explode Bomb", e)
@@ -208,7 +216,7 @@ func main() {
 			// }
 		}
 		count++
-		if count == 1000 {
+		if count == 10000 {
 			fmt.Println("Count:", count)
 			break
 		}
