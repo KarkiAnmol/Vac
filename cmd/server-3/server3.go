@@ -130,10 +130,9 @@ func main() {
 	if err := godotenv.Load(); err != nil {
 		log.Fatal("Error loading .env file", err)
 	}
-	openAPIKey := os.Getenv("OPENAI_API_KEY")
-	fmt.Println("Starting the application...")
 	// Print the OpenAI API key for debugging
-	fmt.Println("the open API key is ", openAPIKey)
+	// openAPIKey := os.Getenv("OPENAI_API_KEY")
+	// fmt.Println("the open API key is ", openAPIKey)
 
 	// Define a route to handle incoming POST requests on /process
 	app.Post("/process", func(c *fiber.Ctx) error {
@@ -151,7 +150,7 @@ func main() {
 		}
 
 		// Print the received data and generated commentary
-		fmt.Printf("Received Event Data: %+v\n", eventData)
+		// fmt.Printf("Received Event Data: %+v\n", eventData)
 		fmt.Printf("Generated Commentary: %s\n", commentary)
 
 		// Send a simple response
@@ -171,20 +170,47 @@ func main() {
 	}
 }
 
+//GPT 3
+// func generateCommentary(event Event) (string, error) {
+// 	openaiAPIKey := os.Getenv("OPENAI_API_KEY")
+// 	client := openai.NewClient(openaiAPIKey)
+// 	eventString := fmt.Sprintf("%+v", event)
+// 	ctx := context.Background()
+
+// 	req := openai.CompletionRequest{
+// 		Model:     openai.GPT3Ada,
+// 		MaxTokens: 5,
+// 		Prompt:    "Generate commentary for Counter Strike Game using this struct for the following event:\n\n" + eventString}
+// 	resp, err := client.CreateCompletion(ctx, req)
+// 	if err != nil {
+// 		fmt.Printf("Completion error: %v\n", err)
+// 		return "", err
+// 	}
+// 	return resp.Choices[0].Text, nil
+// }
+
+//GPT 3.5
 func generateCommentary(event Event) (string, error) {
 	openaiAPIKey := os.Getenv("OPENAI_API_KEY")
 	client := openai.NewClient(openaiAPIKey)
 	eventString := fmt.Sprintf("%+v", event)
-	ctx := context.Background()
+	resp, err := client.CreateChatCompletion(
+		context.Background(),
+		openai.ChatCompletionRequest{
+			Model: openai.GPT3Dot5Turbo,
+			Messages: []openai.ChatCompletionMessage{
+				{
+					Role:    openai.ChatMessageRoleUser,
+					Content: "Generate commentary for Counter Strike Game using this struct for the following event:\n\n" + eventString,
+				},
+			},
+		},
+	)
 
-	req := openai.CompletionRequest{
-		Model:     openai.GPT3Ada,
-		MaxTokens: 5,
-		Prompt:    "Generate commentary for the following event:\n\n" + eventString}
-	resp, err := client.CreateCompletion(ctx, req)
 	if err != nil {
-		fmt.Printf("Completion error: %v\n", err)
+		fmt.Printf("ChatCompletion error: %v\n", err)
 		return "", err
 	}
-	return resp.Choices[0].Text, nil
+
+	return resp.Choices[0].Message.Content, nil
 }
