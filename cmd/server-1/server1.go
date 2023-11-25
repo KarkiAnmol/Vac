@@ -170,44 +170,45 @@ func main() {
 		// fmt.Printf("\n\n\n%v : Filtered Data: \n%+v\n", count, e)
 		// fmt.Printf("\n\nLength of Filtered Data: %v\n", int(reflect.TypeOf(e).Size()))
 
-		responseChan := make(chan error)
+		// responseChan := make(chan error)
 		for _, eventData := range e.Events {
 			// Check for events in priority order
 			if eventData.Type == "team-completed-explodeBomb" {
 				// printFilteredData("Team Completed Explode Bomb", e)
 				// Call the function to send and receive data
-				go sendAndReceiveData(e, responseChan)
+				sendAndReceiveData(e)
 			} else if eventData.Type == "team-won-round" {
 				// printFilteredData("Team Won Round", e)
-				go sendAndReceiveData(e, responseChan)
+				sendAndReceiveData(e)
 			} else if eventData.Type == "team-completed-defuseBomb" {
 				// printFilteredData("Team Completed Defuse Bomb", e)
-				go sendAndReceiveData(e, responseChan)
+
+				sendAndReceiveData(e)
 			} else if eventData.Type == "team-completed-beginDefuseWithoutKit" {
 				// printFilteredData("Team Completed Begin Defuse Without Kit", e)
-				go sendAndReceiveData(e, responseChan)
+				sendAndReceiveData(e)
 			} else if eventData.Type == "team-completed-plantBomb" {
 				// printFilteredData("Team Completed Plant Bomb", e)
-				go sendAndReceiveData(e, responseChan)
+				sendAndReceiveData(e)
 			} else if eventData.Type == "game-ended-round" {
 				// printFilteredData("Game Ended Round", e)
-				go sendAndReceiveData(e, responseChan)
+				sendAndReceiveData(e)
 			} else if eventData.Type == "game-started-round" {
 				// printFilteredData("Game Started Round", e)
-				go sendAndReceiveData(e, responseChan)
+				sendAndReceiveData(e)
 			} else if eventData.Type == "player-killed-player" {
 				// printFilteredData("Player Killed Player", e)
-				go sendAndReceiveData(e, responseChan)
+				sendAndReceiveData(e)
 			} else {
-				// Handle other event types as needed
+				continue
 			}
-			// Wait for the response from the server before proceeding to the next iteration
-			if err := <-responseChan; err != nil {
-				log.Println("Error sending and receiving data:", err)
-			}
+			// // Wait for the response from the server before proceeding to the next iteration
+			// if err := <-responseChan; err != nil {
+			// 	log.Println("Error sending and receiving data:", err)
+			// }
 		}
 		count++
-		if count == 100 {
+		if count == 1000 {
 			fmt.Println("Count:", count)
 			break
 		}
@@ -220,7 +221,7 @@ func main() {
 	app.Get("/ping", func(c *fiber.Ctx) error {
 		return c.SendString("PONG")
 	})
-
+	log.Println("Server 1 listening on :8081")
 	if err := app.Listen(":8081"); err != nil {
 		panic(err)
 	}
@@ -233,28 +234,28 @@ func main() {
 // 		return
 // 	}
 
-// sendAndReceiveData sends the filtered data to another server and waits for a response
-func sendAndReceiveData(e Event, responseChan chan<- error) {
+func sendAndReceiveData(e Event) {
 	serverURL := "http://localhost:8083/process"
 	jsonData, err := json.Marshal(e)
 	if err != nil {
-		responseChan <- err
+		log.Println("Error marshaling JSON:", err)
 		return
 	}
+
 	response, err := http.Post(serverURL, "application/json", bytes.NewBuffer(jsonData))
 	if err != nil {
-		responseChan <- err
+		log.Println("Error sending data:", err)
 		return
 	}
 	defer response.Body.Close()
+
 	responseBody, err := ioutil.ReadAll(response.Body)
 	if err != nil {
-		responseChan <- err
+		log.Println("Error reading response:", err)
 		return
 	}
-	// Later Process the response from the server as needed like add a time stamp
+
 	fmt.Printf("Response from server: %s\n", responseBody)
-	responseChan <- nil
 }
 
 // 	fmt.Printf("\nFiltered Data (%s): %+v", eventType, string(x))
