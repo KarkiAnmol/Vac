@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/joho/godotenv"
@@ -135,6 +136,7 @@ func main() {
 	// fmt.Println("the open API key is ", openAPIKey)
 
 	// Define a route to handle incoming POST requests on /process
+	fmt.Println("Csgo commentary:\n")
 	app.Post("/process", func(c *fiber.Ctx) error {
 		// Parse the JSON data from the request body
 		if err := c.BodyParser(&eventData); err != nil {
@@ -151,11 +153,12 @@ func main() {
 
 		// Print the received data and generated commentary
 		// fmt.Printf("Received Event Data: %+v\n", eventData)
-		fmt.Printf("Generated Commentary: %s\n", commentary)
+		// fmt.Printf("Generated Commentary: %s\n", commentary)
+		fmt.Println(commentary)
 
 		// Send a simple response
 		response := "Data processed successfully"
-		fmt.Printf("Response to client: %s\n", response)
+		// fmt.Printf("Response to client: %s\n", response)
 		return c.SendString(response)
 	})
 
@@ -190,27 +193,39 @@ func main() {
 // }
 
 //GPT 3.5
+var retry = true
+
 func generateCommentary(event Event) (string, error) {
 	openaiAPIKey := os.Getenv("OPENAI_API_KEY")
 	client := openai.NewClient(openaiAPIKey)
 	eventString := fmt.Sprintf("%+v", event)
-	resp, err := client.CreateChatCompletion(
-		context.Background(),
-		openai.ChatCompletionRequest{
-			Model: openai.GPT3Dot5Turbo,
-			Messages: []openai.ChatCompletionMessage{
-				{
-					Role:    openai.ChatMessageRoleUser,
-					Content: "Generate commentary for Counter Strike Game using this struct for the following event:\n\n" + eventString,
+	for retry {
+		resp, err := client.CreateChatCompletion(
+			context.Background(),
+			openai.ChatCompletionRequest{
+				Model: openai.GPT3Dot5Turbo,
+				Messages: []openai.ChatCompletionMessage{
+					{
+						Role:    openai.ChatMessageRoleUser,
+						Content: "Generate one line commentary for a Counter Strike GAME for the following event:\n\n" + eventString,
+					},
 				},
 			},
-		},
-	)
+		)
 
-	if err != nil {
-		fmt.Printf("ChatCompletion error: %v\n", err)
-		return "", err
+		if err != nil {
+			// Check if the error is due to rate limiting (status code 429)
+			if apiError, ok := err.(*openai.APIError); ok && apiError.HTTPStatusCode == 429 {
+				time.Sleep(65 * time.Second)
+				continue
+			}
+
+			// Handle other errors
+			retry = false
+			return "", err
+		}
+		return resp.Choices[0].Message.Content, nil
+
 	}
-
-	return resp.Choices[0].Message.Content, nil
+	return "", fmt.Errorf("Max retries reached")
 }
