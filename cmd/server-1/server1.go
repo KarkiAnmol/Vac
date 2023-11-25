@@ -2,9 +2,12 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
+	"net/http"
 	"os"
 
 	"github.com/gofiber/fiber/v2"
@@ -172,21 +175,54 @@ func main() {
 		for _, eventData := range e.Events {
 			// Check for events in priority order
 			if eventData.Type == "team-completed-explodeBomb" {
-				printFilteredData("Team Completed Explode Bomb", e)
+				// printFilteredData("Team Completed Explode Bomb", e)
+				// Call the function to send and receive data
+				if err := sendAndReceiveData(e); err != nil {
+					log.Println("Error sending and receiving data:", err)
+					continue
+				}
 			} else if eventData.Type == "team-won-round" {
-				printFilteredData("Team Won Round", e)
+				// printFilteredData("Team Won Round", e)
+				if err := sendAndReceiveData(e); err != nil {
+					log.Println("Error sending and receiving data:", err)
+					continue
+				}
 			} else if eventData.Type == "team-completed-defuseBomb" {
-				printFilteredData("Team Completed Defuse Bomb", e)
+				// printFilteredData("Team Completed Defuse Bomb", e)
+				if err := sendAndReceiveData(e); err != nil {
+					log.Println("Error sending and receiving data:", err)
+					continue
+				}
 			} else if eventData.Type == "team-completed-beginDefuseWithoutKit" {
-				printFilteredData("Team Completed Begin Defuse Without Kit", e)
+				// printFilteredData("Team Completed Begin Defuse Without Kit", e)
+				if err := sendAndReceiveData(e); err != nil {
+					log.Println("Error sending and receiving data:", err)
+					continue
+				}
 			} else if eventData.Type == "team-completed-plantBomb" {
-				printFilteredData("Team Completed Plant Bomb", e)
+				// printFilteredData("Team Completed Plant Bomb", e)
+				if err := sendAndReceiveData(e); err != nil {
+					log.Println("Error sending and receiving data:", err)
+					continue
+				}
 			} else if eventData.Type == "game-ended-round" {
-				printFilteredData("Game Ended Round", e)
+				// printFilteredData("Game Ended Round", e)
+				if err := sendAndReceiveData(e); err != nil {
+					log.Println("Error sending and receiving data:", err)
+					continue
+				}
 			} else if eventData.Type == "game-started-round" {
-				printFilteredData("Game Started Round", e)
+				// printFilteredData("Game Started Round", e)
+				if err := sendAndReceiveData(e); err != nil {
+					log.Println("Error sending and receiving data:", err)
+					continue
+				}
 			} else if eventData.Type == "player-killed-player" {
-				printFilteredData("Player Killed Player", e)
+				// printFilteredData("Player Killed Player", e)
+				if err := sendAndReceiveData(e); err != nil {
+					log.Println("Error sending and receiving data:", err)
+					continue
+				}
 			} else {
 				// Handle other event types as needed
 			}
@@ -211,15 +247,37 @@ func main() {
 	}
 
 }
-func printFilteredData(eventType string, e Event) {
-	x, err := json.Marshal(e)
+
+// func printFilteredData(eventType string, e Event) {
+// 	x, err := json.Marshal(e)
+// 	if err != nil {
+// 		return
+// 	}
+
+// sendAndReceiveData sends the filtered data to another server and waits for a response
+func sendAndReceiveData(e Event) error {
+	serverURL := "http://localhost:8083/process"
+	jsonData, err := json.Marshal(e)
 	if err != nil {
-		return
+		return err
 	}
+	response, err := http.Post(serverURL, "application/json", bytes.NewBuffer(jsonData))
+	if err != nil {
+		return err
+	}
+	defer response.Body.Close()
+	responseBody, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		return err
+	}
+	// Process the response from the server as needed
+	fmt.Printf("Response from server: %s\n", responseBody)
 
-	fmt.Printf("\nFiltered Data (%s): %+v", eventType, string(x))
-
+	return nil
 }
+
+// 	fmt.Printf("\nFiltered Data (%s): %+v", eventType, string(x))
+// }
 
 // func filter(event Event) (Event, error) {
 
