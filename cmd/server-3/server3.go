@@ -2,11 +2,15 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/joho/godotenv"
+	openai "github.com/sashabaranov/go-openai"
 )
 
 //Event
@@ -123,6 +127,14 @@ var eventData Event
 func main() {
 	app := fiber.New()
 
+	if err := godotenv.Load(); err != nil {
+		log.Fatal("Error loading .env file", err)
+	}
+	openAPIKey := os.Getenv("OPENAI_API_KEY")
+	fmt.Println("Starting the application...")
+	// Print the OpenAI API key for debugging
+	fmt.Println("the open API key is ", openAPIKey)
+
 	// Define a route to handle incoming POST requests on /process
 	app.Post("/process", func(c *fiber.Ctx) error {
 		// Parse the JSON data from the request body
@@ -131,9 +143,16 @@ func main() {
 			return c.SendStatus(http.StatusBadRequest)
 		}
 
-		// Process the event data as needed, i.e., write code for generating commentary
-		// For now, just print the received data
+		// Generate commentary using GPT-3 directly on the eventData
+		commentary, err := generateCommentary(eventData)
+		if err != nil {
+			log.Println("Error generating commentary:", err)
+			return c.SendStatus(http.StatusInternalServerError)
+		}
+
+		// Print the received data and generated commentary
 		fmt.Printf("Received Event Data: %+v\n", eventData)
+		fmt.Printf("Generated Commentary: %s\n", commentary)
 
 		// Send a simple response
 		response := "Data processed successfully"
@@ -150,4 +169,22 @@ func main() {
 	if err := app.Listen(":8083"); err != nil {
 		log.Fatal("Error starting server:", err)
 	}
+}
+
+func generateCommentary(event Event) (string, error) {
+	openaiAPIKey := os.Getenv("OPENAI_API_KEY")
+	client := openai.NewClient(openaiAPIKey)
+	eventString := fmt.Sprintf("%+v", event)
+	ctx := context.Background()
+
+	req := openai.CompletionRequest{
+		Model:     openai.GPT3Ada,
+		MaxTokens: 5,
+		Prompt:    "Generate commentary for the following event:\n\n" + eventString}
+	resp, err := client.CreateCompletion(ctx, req)
+	if err != nil {
+		fmt.Printf("Completion error: %v\n", err)
+		return "", err
+	}
+	return resp.Choices[0].Text, nil
 }
