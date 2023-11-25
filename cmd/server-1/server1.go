@@ -148,7 +148,7 @@ func main() {
 	buf := make([]byte, maxCapacity)
 	scanner.Buffer(buf, maxCapacity)
 	count := 1
-	i := 0
+
 	for scanner.Scan() {
 		fmt.Println()
 
@@ -170,21 +170,30 @@ func main() {
 		// Check if EventType is "player-damaged-player"
 
 		for _, eventData := range e.Events {
-			if eventData.Type == "player-killed-player" {
-				x, err := json.Marshal(e)
-				if err != nil {
-					return
-				}
-				fmt.Printf("\nFiltered Data: %+v", string(x))
-				// fmt.Printf("\n\nLength of Further Filtered Data: %v\n", int(reflect.TypeOf(e).Size()))
-				i++
-				fmt.Printf("\n\n  Times occured= %v\n  TotalCount= %v\n  ", i, count)
-
-				// later-on pass this filtered data to server 3 where the commentary will be generated
+			// Check for events in priority order
+			if eventData.Type == "team-completed-explodeBomb" {
+				printFilteredData("Team Completed Explode Bomb", e)
+			} else if eventData.Type == "team-won-round" {
+				printFilteredData("Team Won Round", e)
+			} else if eventData.Type == "team-completed-defuseBomb" {
+				printFilteredData("Team Completed Defuse Bomb", e)
+			} else if eventData.Type == "team-completed-beginDefuseWithoutKit" {
+				printFilteredData("Team Completed Begin Defuse Without Kit", e)
+			} else if eventData.Type == "team-completed-plantBomb" {
+				printFilteredData("Team Completed Plant Bomb", e)
+			} else if eventData.Type == "game-ended-round" {
+				printFilteredData("Game Ended Round", e)
+			} else if eventData.Type == "game-started-round" {
+				printFilteredData("Game Started Round", e)
+			} else if eventData.Type == "player-killed-player" {
+				printFilteredData("Player Killed Player", e)
+			} else {
+				// Handle other event types as needed
 			}
 		}
 		count++
 		if count == 100 {
+			fmt.Println("Count:", count)
 			break
 		}
 
@@ -200,6 +209,15 @@ func main() {
 	if err := app.Listen(":8081"); err != nil {
 		panic(err)
 	}
+
+}
+func printFilteredData(eventType string, e Event) {
+	x, err := json.Marshal(e)
+	if err != nil {
+		return
+	}
+
+	fmt.Printf("\nFiltered Data (%s): %+v", eventType, string(x))
 
 }
 
