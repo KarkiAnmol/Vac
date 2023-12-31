@@ -176,7 +176,7 @@ func main() {
 		// Copy the commentaries to return
 		commentariesToReturn := make([]string, len(allCommentaries))
 		copy(commentariesToReturn, allCommentaries)
-		// Reset the newCommentaries slice for next batch of commentaries
+		// Reset the allCommentaries slice for next batch of commentaries
 		allCommentaries = []string{}
 		return c.SendString(strings.Join(commentariesToReturn, "\n"))
 	})
@@ -226,7 +226,7 @@ func generateCommentary(event Event) (string, error) {
 				Messages: []openai.ChatCompletionMessage{
 					{
 						Role:    openai.ChatMessageRoleUser,
-						Content: "Generate one line commentary for a Counter Strike GAME for the following event:\n\n" + eventString,
+						Content: "Generate two line commentary for a Counter Strike GAME for the following event:\n\n" + eventString,
 					},
 				},
 			},
@@ -235,7 +235,7 @@ func generateCommentary(event Event) (string, error) {
 		if err != nil {
 			// Check if the error is due to rate limiting (status code 429)
 			if apiError, ok := err.(*openai.APIError); ok && apiError.HTTPStatusCode == 429 {
-				time.Sleep(65 * time.Second)
+				time.Sleep(10 * time.Second)
 				continue
 			}
 
