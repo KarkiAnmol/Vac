@@ -173,7 +173,12 @@ func main() {
 	})
 	// New endpoint to get the latest commentary
 	app.Get("/getCommentary", func(c *fiber.Ctx) error {
-		return c.SendString(strings.Join(allCommentaries, "\n"))
+		// Copy the commentaries to return
+		commentariesToReturn := make([]string, len(allCommentaries))
+		copy(commentariesToReturn, allCommentaries)
+		// Reset the newCommentaries slice for next batch of commentaries
+		allCommentaries = []string{}
+		return c.SendString(strings.Join(commentariesToReturn, "\n"))
 	})
 
 	// Define a route for a simple ping
