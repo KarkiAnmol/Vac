@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -124,6 +125,7 @@ type TargetSeries struct {
 }
 
 var eventData Event
+var allCommentaries []string
 
 func main() {
 	app := fiber.New()
@@ -155,11 +157,23 @@ func main() {
 		// fmt.Printf("Received Event Data: %+v\n", eventData)
 		// fmt.Printf("Generated Commentary: %s\n", commentary)
 		fmt.Println(commentary)
-
+		// Update the latestCommentary variable with the new commentary
+		allCommentaries = append(allCommentaries, commentary)
 		// Send a simple response
-		response := "Data processed successfully"
+		// response := "Data processed successfully"
 		// fmt.Printf("Response to client: %s\n", response)
-		return c.SendString(response)
+		// return c.SendString(response)
+
+		// Return the generated commentary as part of the response
+		// response := map[string]string{"message": "Data processed successfully", "commentary": commentary}
+		// return c.JSON(response)
+		return c.SendString(commentary)
+
+		// return c.JSON(fiber.Map{"commentary": commentary})
+	})
+	// New endpoint to get the latest commentary
+	app.Get("/getCommentary", func(c *fiber.Ctx) error {
+		return c.SendString(strings.Join(allCommentaries, "\n"))
 	})
 
 	// Define a route for a simple ping
