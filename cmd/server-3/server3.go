@@ -11,6 +11,8 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/adaptor"
+	socketio "github.com/googollee/go-socket.io"
 	"github.com/joho/godotenv"
 	openai "github.com/sashabaranov/go-openai"
 )
@@ -126,8 +128,26 @@ type TargetSeries struct {
 
 var eventData Event
 var allCommentaries []string
+var server *socketio.Server
 
 func main() {
+
+	server = socketio.NewServer(nil)
+	if server == nil {
+		log.Fatal("Failed to create socket.io server")
+	}
+
+	// Set up WebSocket event handlers
+	server.OnConnect("/", func(s socketio.Conn) error {
+		log.Println("Connected:", s.ID())
+		return nil
+	})
+
+	server.OnDisconnect("/", func(s socketio.Conn, reason string) {
+		log.Println("Disconnected:", s.ID())
+	})
+
+	// Initialize Fiber
 	app := fiber.New()
 
 	if err := godotenv.Load(); err != nil {
@@ -157,6 +177,8 @@ func main() {
 		// fmt.Printf("Received Event Data: %+v\n", eventData)
 		// fmt.Printf("Generated Commentary: %s\n", commentary)
 		fmt.Println(commentary)
+		// Emit the new commentary to all connected WebSocket clients
+		server.BroadcastToNamespace("/", "new_commentary", commentary)
 		// Update the latestCommentary variable with the new commentary
 		allCommentaries = append(allCommentaries, commentary)
 		// Send a simple response
@@ -171,6 +193,8 @@ func main() {
 
 		// return c.JSON(fiber.Map{"commentary": commentary})
 	})
+	// Adapt the socket.io server to work with Fiber
+	app.Use("/socket.io/", adaptor.HTTPHandler(server))
 	// New endpoint to get the latest commentary
 	app.Get("/getCommentary", func(c *fiber.Ctx) error {
 		// Copy the commentaries to return
@@ -190,6 +214,13 @@ func main() {
 	if err := app.Listen(":8083"); err != nil {
 		log.Fatal("Error starting server:", err)
 	}
+	// Start the socket.io server
+	go func() {
+		if err := server.Serve(); err != nil {
+			log.Fatalf("socket.io listen error: %s\n", err)
+		}
+	}()
+	defer server.Close()
 }
 
 //GPT 3
